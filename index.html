@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Local Shop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f8f9fa; color: #333; }
+        
+        /* Navbar */
+        header { background: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .logo { font-size: 20px; font-weight: bold; color: #111; }
+        .cart-icon { position: relative; cursor: pointer; font-size: 22px; }
+        .cart-count { position: absolute; top: -8px; right: -10px; background: #e74c3c; color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 50%; }
+
+        /* Hero Section */
+        .hero { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://i.ibb.co/bR8R0bV/IMG-0895.jpg') center/cover; height: 300px; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .hero h1 { font-size: 32px; margin-bottom: 10px; }
+        .hero btn { background: #e74c3c; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-weight: bold; }
+
+        /* Products Grid */
+        .container { padding: 30px 20px; max-width: 1100px; margin: 0 auto; }
+        .section-title { margin-bottom: 20px; font-size: 22px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .product-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; padding-bottom: 15px; }
+        .product-card img { width: 100%; height: 180px; object-fit: cover; }
+        .product-card h3 { font-size: 16px; margin: 10px 0 5px; }
+        .product-card .price { font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        .add-btn { background: #111; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+
+        /* Cart Drawer */
+        .cart-drawer { position: fixed; top: 0; right: -400px; width: 100%; max-width: 350px; height: 100%; background: #fff; box-shadow: -2px 0 10px rgba(0,0,0,0.1); transition: 0.3s; z-index: 101; padding: 20px; display: flex; flex-direction: column; }
+        .cart-drawer.open { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .close-btn { cursor: pointer; font-size: 20px; }
+        .cart-items { flex: 1; overflow-y: auto; margin: 15px 0; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #f4f4f4; padding-bottom: 5px; }
+        
+        /* Order Form */
+        form input, form textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .submit-btn { width: 100%; background: #27ae60; color: #fff; border: none; padding: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        /* Floating WhatsApp Button */
+        .whatsapp-float { position: fixed; bottom: 20px; left: 20px; background: #25d366; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">The Local Shop</div>
+        <div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
+    </header>
+
+    <section class="hero">
+        <h1>Fresh Finds, Best Prices</h1>
+        <p>Your neighbourhood store reimagined.</p>
+    </section>
+
+    <div class="container">
+        <h2 class="section-title">Our Products</h2>
+        <div class="products-grid" id="productGrid"></div>
+    </div>
+
+    <!-- Slide-over Cart Drawer -->
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <span class="close-btn" onclick="toggleCart()">✕</span>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div style="font-weight: bold; margin-bottom: 15px;">Total: ₹<span id="cartTotal">0</span></div>
+
+        <!-- Formspree Form Integration -->
+        <form action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST">
+            <input type="hidden" name="Order_Details" id="orderDetailsInput">
+            <input type="text" name="Name" placeholder="Your Name" required>
+            <input type="tel" name="Phone" placeholder="Phone Number" required>
+            <textarea name="Address" placeholder="Delivery Address" required></textarea>
+            <button type="submit" class="submit-btn">Send Order</button>
+        </form>
+    </div>
+
+    <!-- WhatsApp Floating Link -->
+    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">💬</a>
+
+    <script>
+        const products = [
+            { id: 1, name: "Household Combo", price: 349, img: "https://i.ibb.co/yFrOP33p/image.jpg" },
+            { id: 2, name: "Weekend Special", price: 599, img: "https://i.ibb.co/PG9tSJFw/image.jpg" },
+            { id: 3, name: "Breakfast Bundle", price: 249, img: "https://i.ibb.co/chkZpf73/image.jpg" }
+        ];
+
+        let cart = [];
+
+        function displayProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.img}" alt="${p.name}">
+                    <h3>${p.name}</h3>
+                    <div class="price">₹${p.price}</div>
+                    <button class="add-btn" onclick="addToCart(${p.id})">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const item = products.find(p => p.id === id);
+            cart.push(item);
+            updateCart();
+        }
+
+        function updateCart() {
+            document.getElementById('cartCount').innerText = cart.length;
+            const cartItemsContainer = document.getElementById('cartItems');
+            cartItemsContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <span>${item.name}</span>
+                    <span>₹${item.price}</span>
+                </div>
+            `).join('');
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('cartTotal').innerText = total;
+
+            // Form hidden input value update
+            const details = cart.map(i => `${i.name} (₹${i.price})`).join(', ');
+            document.getElementById('orderDetailsInput').value = `Items: ${details} | Total: ₹${total}`;
+        }
+
+        function toggleCart() {
+            document.getElementById('cartDrawer').classList.toggle('open');
+        }
+
+        displayProducts();
+    </script>
+</body>
+</html>
